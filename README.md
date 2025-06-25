@@ -47,7 +47,7 @@ graph TD
     CLASSIFIER -->|general| GEN_START[⚡ General Workflow]
     
     %% Medical Workflow
-    subgraph MEDICAL [📚 Medical Workflow - 논문 검색 전용]
+    subgraph MEDICAL [📚 Medical Workflow ]
         MED_START --> TRANSLATE_EN[🔄 translate_to_english<br/>한글→영어 번역]
         TRANSLATE_EN --> MED_AGENT[🤖 agent<br/>LLM + 도구 바인딩]
         MED_AGENT --> MED_DECISION{should_continue_or_answer_medical}
@@ -61,7 +61,7 @@ graph TD
     end
     
     %% General Workflow
-    subgraph GENERAL [⚡ General Workflow - 빠른 처리]
+    subgraph GENERAL [⚡ General Workflow ]
         GEN_START --> GEN_AGENT[🤖 korean_agent<br/>한글 직접 처리<br/>멀티턴 지원]
         GEN_AGENT --> GEN_DECISION{should_continue_or_answer_general}
         GEN_DECISION -->|continue| GEN_ACTION[🔧 simple_tool_node<br/>다양한 MCP 도구<br/>웹검색, 날씨 등]
