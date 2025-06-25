@@ -34,6 +34,86 @@ else:
 
 ---
 
+## 🎯 전체 워크플로우 구조
+
+### 📊 LangGraph 노드 완전 다이어그램
+
+```mermaid
+graph TD
+    START([🚀 사용자 질문]) --> CLASSIFIER{🧠 WorkflowClassifier<br/>LLM 기반 분류}
+    
+    %% 분류 결과에 따른 워크플로우 선택
+    CLASSIFIER -->|medical| MED_START[📚 Medical Workflow]
+    CLASSIFIER -->|general| GEN_START[⚡ General Workflow]
+    
+    %% Medical Workflow
+    subgraph MEDICAL [📚 Medical Workflow - 논문 검색 전용]
+        MED_START --> TRANSLATE_EN[🔄 translate_to_english<br/>한글→영어 번역]
+        TRANSLATE_EN --> MED_AGENT[🤖 agent<br/>LLM + 도구 바인딩]
+        MED_AGENT --> MED_DECISION{should_continue_or_answer_medical}
+        MED_DECISION -->|continue| MED_ACTION[🔧 action<br/>안전한 도구 실행<br/>PubMed 검색]
+        MED_DECISION -->|direct_answer| MED_DIRECT[💬 direct_answer<br/>한글 직접 답변]
+        MED_ACTION --> AFTER_ACTION{after_action_medical}
+        AFTER_ACTION -->|agent| MED_AGENT
+        AFTER_ACTION -->|translate| TRANSLATE_KR[🔄 translate_to_korean<br/>영어→한글 번역]
+        TRANSLATE_KR --> MED_END([✅ Medical 완료])
+        MED_DIRECT --> MED_END
+    end
+    
+    %% General Workflow
+    subgraph GENERAL [⚡ General Workflow - 빠른 처리]
+        GEN_START --> GEN_AGENT[🤖 korean_agent<br/>한글 직접 처리<br/>멀티턴 지원]
+        GEN_AGENT --> GEN_DECISION{should_continue_or_answer_general}
+        GEN_DECISION -->|continue| GEN_ACTION[🔧 simple_tool_node<br/>다양한 MCP 도구<br/>웹검색, 날씨 등]
+        GEN_DECISION -->|direct_answer| GEN_DIRECT[💬 direct_answer<br/>한글 직접 답변]
+        GEN_ACTION --> FORMAT[📝 format_korean_response<br/>한글 응답 정리]
+        FORMAT --> GEN_END([✅ General 완료])
+        GEN_DIRECT --> GEN_END
+    end
+    
+    %% 스타일링
+    classDef startEnd fill:#e1f5fe,stroke:#01579b,stroke-width:3px
+    classDef classifier fill:#fff3e0,stroke:#e65100,stroke-width:2px
+    classDef medical fill:#f3e5f5,stroke:#4a148c,stroke-width:2px
+    classDef general fill:#e8f5e8,stroke:#1b5e20,stroke-width:2px
+    classDef decision fill:#fff8e1,stroke:#f57f17,stroke-width:2px
+    classDef action fill:#fce4ec,stroke:#880e4f,stroke-width:2px
+    
+    class START,MED_END,GEN_END startEnd
+    class CLASSIFIER classifier
+    class TRANSLATE_EN,MED_AGENT,TRANSLATE_KR,MED_DIRECT medical
+    class GEN_AGENT,GEN_ACTION,FORMAT,GEN_DIRECT general
+    class MED_DECISION,AFTER_ACTION,GEN_DECISION decision
+    class MED_ACTION,GEN_ACTION action
+```
+
+### 🏗️ 워크플로우 구성 요소
+
+#### 🧠 **WorkflowClassifier** (지능형 분류)
+- **LLMWorkflowClassifier**: 도구 분석 + LLM reasoning
+- **입력**: 사용자 질문 + 사용 가능한 도구 목록
+- **출력**: "medical" 또는 "general" 워크플로우 선택
+- **특징**: 프롬프트 기반 분류 (하드코딩 키워드 제거)
+
+#### 📚 **Medical Workflow Nodes**
+- `translate_to_english`: 대화 맥락 고려한 의학 용어 번역
+- `agent (call_model)`: LLM + 도구 바인딩으로 PubMed 검색 결정
+- `action (safe_tool_node)`: 안전한 MCP 도구 실행 + 에러 처리
+- `translate_to_korean`: 메타데이터 보존 영한 번역
+- `direct_answer`: 도구 없이 한글 직접 답변
+
+#### ⚡ **General Workflow Nodes**
+- `korean_agent`: 한글 네이티브 처리 + 멀티턴 대화 지원
+- `simple_tool_node`: 빠른 MCP 도구 실행 (웹검색, 날씨 등)
+- `format_korean_response`: 한글 응답 정리 및 포맷팅
+- `direct_answer`: 즉시 한글 답변
+
+#### 🔀 **조건부 엣지 (Conditional Edges)**
+- `should_continue_or_answer_medical/general`: tool_calls 여부로 분기
+- `after_action_medical`: 항상 번역으로 이동
+
+---
+
 ## 🔬 시나리오 1: 의료논문 질문
 
 **예시 질문**: "당뇨병 치료에 대한 최신 연구 논문을 찾아줘"
