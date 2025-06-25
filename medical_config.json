@@ -1,0 +1,16 @@
+{
+  "healthcare-mcp-public": {
+    "command": "cmd",
+    "args": [
+      "/c",
+      "npx",
+      "-y",
+      "@smithery/cli@latest",
+      "run",
+      "@Cicatriiz/healthcare-mcp-public",
+      "--key",
+      "a0fde5b8-88e9-46d3-ab62-ad5096bd7d4b"
+    ],
+    "transport": "stdio"
+  }
+}
