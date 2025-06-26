@@ -54,8 +54,7 @@ graph TD
         MED_DECISION -->|continue| MED_ACTION[🔧 action<br/>안전한 도구 실행<br/>PubMed 검색]
         MED_DECISION -->|direct_answer| MED_DIRECT[💬 direct_answer<br/>한글 직접 답변]
         MED_ACTION --> AFTER_ACTION{after_action_medical}
-        AFTER_ACTION -->|agent| MED_AGENT
-        AFTER_ACTION -->|translate| TRANSLATE_KR[🔄 translate_to_korean<br/>영어→한글 번역]
+        AFTER_ACTION --> TRANSLATE_KR[🔄 translate_to_korean<br/>영어→한글 번역]
         TRANSLATE_KR --> MED_END([✅ Medical 완료])
         MED_DIRECT --> MED_END
     end
@@ -110,7 +109,7 @@ graph TD
 
 #### 🔀 **조건부 엣지 (Conditional Edges)**
 - `should_continue_or_answer_medical/general`: tool_calls 여부로 분기
-- `after_action_medical`: 항상 번역으로 이동
+- `after_action_medical`: 도구 실행 후 항상 번역으로 이동 (단순화된 흐름)
 
 ---
 
@@ -379,9 +378,9 @@ next_step = should_continue_or_answer_medical(state)
 
 #### `after_action_medical()`
 ```python
-# 의료 워크플로우 후처리 분기
+# 의료 워크플로우 후처리 분기 (단순화됨)
 next_step = after_action_medical(state)
-# 반환값: "agent" (재시도) 또는 "translate" (완료)
+# 반환값: 항상 "translate" (완료) - 재시도 로직 없음
 ```
 
 #### `should_continue_or_answer_general()`
